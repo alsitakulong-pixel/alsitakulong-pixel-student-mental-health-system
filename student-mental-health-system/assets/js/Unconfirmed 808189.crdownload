@@ -1,0 +1,213 @@
+// ============================================
+// SNHS WELLNESS - MAIN JAVASCRIPT
+// ============================================
+
+// ============================================
+// DARK MODE - INITIALIZE EARLY
+// ============================================
+(function() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    if (savedTheme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+    }
+})();
+
+// ============================================
+// SIDEBAR TOGGLE (global function for onclick)
+// ============================================
+function toggleSidebar() {
+    const sidebar = document.getElementById('appSidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    const body = document.body;
+    
+    if (!sidebar) return;
+    
+    sidebar.classList.toggle('show');
+    if (overlay) overlay.classList.toggle('show');
+    body.classList.toggle('sidebar-open');
+}
+
+// Expose globally
+window.toggleSidebar = toggleSidebar;
+
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // ============================================
+    // DARK MODE TOGGLE
+    // ============================================
+    const htmlElement = document.documentElement;
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    const darkModeToggleMobile = document.getElementById('darkModeToggleMobile');
+    const darkModeIcon = document.getElementById('darkModeIcon');
+    const darkModeIconMobile = document.getElementById('darkModeIconMobile');
+    
+    function updateDarkModeIcons() {
+        const isDark = htmlElement.getAttribute('data-theme') === 'dark';
+        
+        if (darkModeIcon) {
+            darkModeIcon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+        }
+        if (darkModeIconMobile) {
+            darkModeIconMobile.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+        }
+        // Also update label text
+        const label = document.querySelector('.sidebar-footer-label');
+        if (label && darkModeToggle) {
+            const parentBtn = darkModeToggle;
+            if (parentBtn) {
+                const span = parentBtn.querySelector('.sidebar-footer-label');
+                if (span) span.textContent = isDark ? 'Light Mode' : 'Dark Mode';
+            }
+        }
+    }
+    
+    function toggleDarkMode() {
+        const isDark = htmlElement.getAttribute('data-theme') === 'dark';
+        if (isDark) {
+            htmlElement.removeAttribute('data-theme');
+            localStorage.setItem('theme', 'light');
+        } else {
+            htmlElement.setAttribute('data-theme', 'dark');
+            localStorage.setItem('theme', 'dark');
+        }
+        updateDarkModeIcons();
+    }
+    
+    if (darkModeToggle) {
+        darkModeToggle.addEventListener('click', toggleDarkMode);
+    }
+    if (darkModeToggleMobile) {
+        darkModeToggleMobile.addEventListener('click', toggleDarkMode);
+    }
+    
+    updateDarkModeIcons();
+    
+    // ============================================
+    // AUTO-HIDE ALERTS
+    // ============================================
+    setTimeout(function() {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+            alert.style.transition = 'opacity 0.5s';
+            alert.style.opacity = '0';
+            setTimeout(() => alert.remove(), 500);
+        });
+    }, 5000);
+    
+    // ============================================
+    // PASSWORD CONFIRMATION VALIDATION
+    // ============================================
+    const passwordForm = document.querySelector('form[data-password-form]');
+    if (passwordForm) {
+        const password = passwordForm.querySelector('input[name="new_password"]');
+        const confirm = passwordForm.querySelector('input[name="confirm_password"]');
+        const submitBtn = passwordForm.querySelector('button[type="submit"]');
+        
+        if (submitBtn) {
+            submitBtn.addEventListener('click', function(e) {
+                if (password && confirm && password.value !== confirm.value) {
+                    e.preventDefault();
+                    alert('Passwords do not match!');
+                }
+            });
+        }
+    }
+    
+    // ============================================
+    // CONFIRM DELETE ACTIONS
+    // ============================================
+    document.querySelectorAll('form[data-confirm]').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            if (!confirm(this.getAttribute('data-confirm'))) {
+                e.preventDefault();
+            }
+        });
+    });
+    
+    // ============================================
+    // DATE INPUT - Set min to today
+    // ============================================
+    const dateInputs = document.querySelectorAll('input[type="date"]');
+    dateInputs.forEach(input => {
+        if (!input.getAttribute('min')) {
+            input.setAttribute('min', new Date().toISOString().split('T')[0]);
+        }
+    });
+    
+    // ============================================
+    // FLASH MESSAGES (Toast)
+    // ============================================
+    const flashMessage = document.querySelector('.flash-message');
+    if (flashMessage) {
+        const type = flashMessage.getAttribute('data-type');
+        const message = flashMessage.getAttribute('data-message');
+        
+        const toast = document.createElement('div');
+        toast.className = `toast align-items-center text-white bg-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'primary'} border-0`;
+        toast.setAttribute('role', 'alert');
+        toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">${message}</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        `;
+        
+        const container = document.querySelector('.toast-container') || document.createElement('div');
+        container.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+        container.appendChild(toast);
+        document.body.appendChild(container);
+        
+        const bootstrapToast = new bootstrap.Toast(toast, { delay: 5000 });
+        bootstrapToast.show();
+    }
+    
+    // ============================================
+    // DOUBLE-SUBMIT PREVENTION
+    // ============================================
+    document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', function() {
+            const submitBtn = this.querySelector('button[type="submit"]');
+            if (submitBtn && !submitBtn.hasAttribute('data-no-disable')) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Processing...';
+            }
+        });
+    });
+    
+    // ============================================
+    // CANCEL APPOINTMENT CONFIRMATION
+    // ============================================
+    document.querySelectorAll('form[data-cancel-appointment]').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            if (!confirm('Are you sure you want to cancel this appointment? This cannot be undone.')) {
+                e.preventDefault();
+            }
+        });
+    });
+    
+    // ============================================
+    // CLOSE SIDEBAR ON LINK CLICK (mobile)
+    // ============================================
+    document.querySelectorAll('.sidebar-link').forEach(link => {
+        link.addEventListener('click', function() {
+            if (window.innerWidth < 992) {
+                const sidebar = document.getElementById('appSidebar');
+                if (sidebar && sidebar.classList.contains('show')) {
+                    toggleSidebar();
+                }
+            }
+        });
+    });
+    
+    // ============================================
+    // CLOSE SIDEBAR ON ESC KEY
+    // ============================================
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const sidebar = document.getElementById('appSidebar');
+            if (sidebar && sidebar.classList.contains('show')) {
+                toggleSidebar();
+            }
+        }
+    });
+});
