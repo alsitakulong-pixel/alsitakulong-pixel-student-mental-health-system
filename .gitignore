@@ -1,0 +1,41 @@
+# ============================================
+# SENSITIVE FILES - DO NOT COMMIT
+# ============================================
+
+# Environment / config with credentials
+config/database.local.php
+.env
+.env.local
+
+# User uploaded files (privacy!)
+assets/uploads/
+!assets/uploads/.gitkeep
+
+# ============================================
+# SYSTEM FILES
+# ============================================
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ============================================
+# LOGS & TEMPORARY
+# ============================================
+
+*.log
+logs/
+error_log
+php_error.log
+
+# Composer
+/vendor/
+composer.lock
